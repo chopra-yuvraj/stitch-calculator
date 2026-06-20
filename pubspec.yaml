@@ -1,0 +1,21 @@
+name: stitch_calculator
+description: An elderly-friendly stitch calculation app.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # url_launcher opens the native phone dialer when "Call for Help" is tapped
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: tru
