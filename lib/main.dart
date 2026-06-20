@@ -4,37 +4,28 @@ import 'package:url_launcher/url_launcher.dart';
 
 void main() => runApp(const StitchCalculatorApp());
 
-// ─────────────────────────────────────────────────────────────────────────────
-// App Root
-// ─────────────────────────────────────────────────────────────────────────────
-
 class StitchCalculatorApp extends StatelessWidget {
   const StitchCalculatorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Stitch Calculator',
+      title: 'Yuvi Stitch Calculator',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        // Light grey background — easy on elderly eyes, high contrast
         scaffoldBackgroundColor: const Color(0xFFF5F7FA),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1A237E), // Deep indigo — strong contrast
+          backgroundColor: Color(0xFF1A237E), 
           foregroundColor: Colors.white,
           centerTitle: true,
-          elevation: 4,
+          elevation: 2,
         ),
       ),
       home: const CalculatorScreen(),
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Calculator Screen (single screen, fully stateful)
-// ─────────────────────────────────────────────────────────────────────────────
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -44,19 +35,15 @@ class CalculatorScreen extends StatefulWidget {
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
-  // One controller per input field
   final _stitchCtrl = TextEditingController();
   final _headCtrl   = TextEditingController();
   final _rateCtrl   = TextEditingController();
 
-  // Holds the computed result string; null means "not calculated yet"
   String? _result;
 
-  // Brand colours — defined once, used everywhere
-  static const _primaryColor = Color(0xFF1A237E); // Deep indigo
-  static const _dangerColor  = Color(0xFFC62828); // Deep red
+  static const _primaryColor = Color(0xFF1A237E); 
+  static const _dangerColor  = Color(0xFFC62828); 
 
-  // Always dispose controllers to avoid memory leaks
   @override
   void dispose() {
     _stitchCtrl.dispose();
@@ -65,10 +52,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     super.dispose();
   }
 
-  // ─── Business Logic ────────────────────────────────────────────────────────
-
   void _calculate() {
-    // double.tryParse returns null for empty or non-numeric input
     final stitch = double.tryParse(_stitchCtrl.text.trim());
     final head   = double.tryParse(_headCtrl.text.trim());
     final rate   = double.tryParse(_rateCtrl.text.trim());
@@ -81,10 +65,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       return;
     }
 
-    // Formula: (Stitch × Head × Rate) ÷ 1000
     final answer = (stitch * head * rate) / 1000.0;
-
-    // Show 4 decimal places so the result is precise
     setState(() => _result = answer.toStringAsFixed(4));
   }
 
@@ -95,23 +76,16 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     setState(() => _result = null);
   }
 
-  // Opens the phone dialer with the support number pre-filled
   Future<void> _callForHelp() async {
-    final uri = Uri(scheme: 'tel', path: '8000444255');
-
+    final uri = Uri(scheme: 'tel', path: '1234567890');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      // Fallback: show a visible error if the dialer can't be opened
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            '⚠️  Cannot open the phone dialer on this device.',
-            style: TextStyle(fontSize: 18),
-          ),
+          content: Text('⚠️ Cannot open the phone dialer.', style: TextStyle(fontSize: 16)),
           backgroundColor: _dangerColor,
-          duration: Duration(seconds: 4),
         ),
       );
     }
@@ -121,247 +95,200 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          title,
-          style: const TextStyle(
-              fontSize: 26, fontWeight: FontWeight.bold),
-        ),
-        content:
-            Text(message, style: const TextStyle(fontSize: 22)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+        content: Text(message, style: const TextStyle(fontSize: 18)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK',
-                style: TextStyle(fontSize: 22)),
+            child: const Text('OK', style: TextStyle(fontSize: 18)),
           ),
         ],
       ),
     );
   }
-
-  // ─── UI Helper — builds one labelled numeric input field ───────────────────
 
   Widget _inputField(String label, TextEditingController ctrl) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Label — bold, at least 24 sp (accessibility requirement)
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A2E),
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: ctrl,
-            // Opens NUMERIC keypad only — no confusing letter keys
-            keyboardType:
-                const TextInputType.numberWithOptions(decimal: true),
-            // Only allow digits and a single decimal point
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-            ],
-            // Large font inside the field so it's easy to see what was typed
-            style: const TextStyle(
-                fontSize: 28, color: Color(0xFF0D0D0D)),
-            decoration: InputDecoration(
-              hintText: 'Enter value…',
-              hintStyle: const TextStyle(
-                  fontSize: 22, color: Color(0xFFBDBDBD)),
-              // Tall padding creates a large, finger-friendly touch target
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 22),
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14)),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(
-                    color: _primaryColor, width: 3),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(
-                    color: Color(0xFF9E9E9E), width: 1.5),
-              ),
-            ),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.only(bottom: 14), // Reduced spacing
     );
   }
-
-  // ─── Main Build ────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Stitch Calculator',
-          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          'Yuvi Stitch Calculator',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold), // Sleeker title
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          padding: const EdgeInsets.all(20), // More compact padding
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-
-              // ── Three input fields ─────────────────────────────────────────
-              _inputField('Stitch', _stitchCtrl),
-              _inputField('Head',   _headCtrl),
-              _inputField('Rate',   _rateCtrl),
-              const SizedBox(height: 8),
-
-              // ── CALCULATE button ───────────────────────────────────────────
-              SizedBox(
-                height: 72, // Large touch target
-                child: ElevatedButton.icon(
-                  onPressed: _calculate,
-                  icon: const Icon(Icons.calculate_rounded, size: 34),
-                  label: const Text(
-                    'CALCULATE',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
+              // Row 1: Stitch Input
+              Row(
+                children: [
+                  const SizedBox(width: 80, child: Text('Stitch:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: TextField(
+                        controller: _stitchCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                        style: const TextStyle(fontSize: 18),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
                     ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    elevation: 5,
-                  ),
-                ),
+                ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
-              // ── CLEAR button ───────────────────────────────────────────────
-              SizedBox(
-                height: 66,
-                child: OutlinedButton.icon(
-                  onPressed: _clear,
-                  icon: const Icon(Icons.clear_rounded, size: 30),
-                  label: const Text(
-                    'CLEAR',
-                    style: TextStyle(
-                        fontSize: 26, fontWeight: FontWeight.bold),
+              // Row 2: Head Input
+              Row(
+                children: [
+                  const SizedBox(width: 80, child: Text('Head:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: TextField(
+                        controller: _headCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                        style: const TextStyle(fontSize: 18),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
                   ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _dangerColor,
-                    side: const BorderSide(
-                        color: _dangerColor, width: 2.5),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                  ),
-                ),
+                ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 12),
 
-              // ── Result box — fades in after calculation ────────────────────
+              // Row 3: Rate Input
+              Row(
+                children: [
+                  const SizedBox(width: 80, child: Text('Rate:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
+                  Expanded(
+                    child: SizedBox(
+                      height: 50,
+                      child: TextField(
+                        controller: _rateCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                        style: const TextStyle(fontSize: 18),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Action Buttons side by side to save vertical space
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: SizedBox(
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _calculate,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('CALCULATE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 1,
+                    child: SizedBox(
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: _clear,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _dangerColor,
+                          side: const BorderSide(color: _dangerColor, width: 1.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('CLEAR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Compact Result Box
               AnimatedSwitcher(
-                duration: const Duration(milliseconds: 350),
+                duration: const Duration(milliseconds: 250),
                 child: _result == null
                     ? const SizedBox.shrink(key: ValueKey('empty'))
                     : Container(
                         key: const ValueKey('result'),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 28, horizontal: 24),
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8EAF6), // Soft indigo tint
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                              color: _primaryColor, width: 2.5),
+                          color: const Color(0xFFE8EAF6),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _primaryColor, width: 2),
                         ),
-                        child: Column(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.between,
                           children: [
-                            // "RESULT" label
-                            const Text(
-                              'RESULT',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: _primaryColor,
-                                letterSpacing: 4,
-                              ),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('RESULT', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: _primaryColor, letterSpacing: 2)),
+                                Text('(Stitch × Head × Rate) ÷ 1000', style: TextStyle(fontSize: 11, color: Color(0xFF5C6BC0))),
+                              ],
                             ),
-                            const SizedBox(height: 12),
-                            // The number itself — 64 sp, bold, impossible to miss
-                            Text(
-                              _result!,
-                              style: const TextStyle(
-                                fontSize: 64,
-                                fontWeight: FontWeight.bold,
-                                color: _primaryColor,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            // Formula reminder so the user knows what they calculated
-                            const Text(
-                              '(Stitch × Head × Rate) ÷ 1000',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF5C6BC0)),
-                            ),
+                            Text(_result!, style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: _primaryColor)),
                           ],
                         ),
                       ),
               ),
 
-              // ── Visual separator before the help button ────────────────────
-              const SizedBox(height: 32),
-              const Divider(thickness: 1.5),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+              const Divider(thickness: 1),
+              const SizedBox(height: 14),
 
-              // ── CALL FOR HELP button ───────────────────────────────────────
-              // Prominent red, 80 dp tall, phone icon — immediately visible
+              // Smaller Support Assistance Button
               SizedBox(
-                height: 80,
+                height: 50,
                 child: ElevatedButton.icon(
                   onPressed: _callForHelp,
-                  icon: const Icon(
-                      Icons.phone_in_talk_rounded, size: 40),
-                  label: const Text(
-                    'CALL FOR HELP',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
+                  icon: const Icon(Icons.phone_in_talk_rounded, size: 22),
+                  label: const Text('Call Support Assistant', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _dangerColor,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    elevation: 6,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              // Small caption showing the number so users know who they'll call
-              const Center(
-                child: Text(
-                  'Tap to call: 1234567890',
-                  style: TextStyle(
-                      fontSize: 18, color: Color(0xFF757575)),
-                ),
-              ),
-              const SizedBox(height: 24),
-
             ],
           ),
         ),
